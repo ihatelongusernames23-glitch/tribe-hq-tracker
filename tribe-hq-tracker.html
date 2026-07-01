@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tribe HQ Stats Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#14110D;color:#ECE6D9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+.root{--bg:#14110D;--paper:#1E1A14;--rule:#3A332855;--red:#C1442D;--green:#5E8C6A;--amber:#D9A441;--text:#ECE6D9;--muted:#8A8275;min-height:100vh;padding:20px 16px 80px;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.18em;color:var(--amber);text-transform:uppercase;margin-bottom:4px;}
+h1{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;text-transform:uppercase;margin-bottom:24px;}
+.section{margin-bottom:28px;}
+.section-title{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:14px;}
+.upload-box{display:block;text-align:center;padding:22px 16px;border:1.5px dashed var(--rule);border-radius:8px;color:var(--amber);font-size:13px;cursor:pointer;background:var(--paper);transition:border-color .15s;width:100%;}
+.upload-box:hover{border-color:var(--amber);}
+.loading{color:var(--muted);animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.banner{margin-top:10px;padding:10px 12px;border-radius:6px;background:#1E2E20;color:var(--green);font-size:12px;border:1px solid var(--green);}
+.err{margin-top:10px;color:var(--red);font-size:12px;}
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.card{background:var(--paper);border-radius:8px;padding:14px;}
+.card .num{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;}
+.card .lbl{font-size:11px;color:var(--muted);margin-top:4px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;}
+.week-card{background:var(--paper);border-radius:8px;padding:14px;margin-bottom:10px;}
+.week-title{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;margin-bottom:6px;color:var(--amber);}
+.week-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;}
+.week-stat .v{font-size:15px;font-weight:600;}
+.week-stat .l{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;}
+.pos{color:var(--green);}.neg{color:var(--red);}
+.vid-card{background:var(--paper);border-radius:8px;padding:14px;margin-bottom:10px;border-left:3px solid var(--rule);}
+.pred-card{background:var(--paper);border-radius:8px;padding:14px;margin-bottom:12px;border-left:3px solid var(--amber);}
+.vid-title{font-size:13.5px;font-weight:600;margin-bottom:4px;}
+.vid-meta{font-size:11px;color:var(--muted);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;}
+.remove{background:none;border:none;color:var(--muted);cursor:pointer;float:right;font-size:16px;padding:0;margin-top:-2px;}
+.remove:hover{color:var(--red);}
+.empty{color:var(--muted);font-size:13px;font-style:italic;margin-top:10px;}
+.pred-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.pred-stat .v{font-size:13px;font-weight:600;}
+.pred-stat .l{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;}
+.pred-take{font-size:12.5px;line-height:1.5;border-top:1px solid var(--rule);padding-top:10px;margin-top:4px;font-style:italic;}
+.risk-low{color:var(--green);}.risk-med{color:var(--amber);}.risk-hig{color:var(--red);}
+.settings-btn{position:fixed;bottom:16px;right:16px;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--muted);cursor:pointer;font-family:'IBM Plex Mono',monospace;}
+.settings-btn:hover{color:var(--amber);}
+.api-wrap{padding:40px 20px;max-width:480px;margin:60px auto;}
+.api-input{width:100%;padding:10px 12px;background:#1E1A14;border:1px solid #3A3328;border-radius:6px;color:#ECE6D9;font-size:14px;margin-bottom:12px;}
+.api-btn{background:#D9A441;color:#14110D;border:none;border-radius:6px;padding:10px 20px;font-weight:700;font-size:13px;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;}
+table{border-collapse:collapse;width:100%;margin-top:8px;}
+th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--rule);}
+th{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);}
+td{font-size:12px;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useMemo}=React;
+
+const ls=(k)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}};
+const lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+const fmt$=(n)=>isNaN(n)?'$—':`$${Number(n).toFixed(2)}`;
+const fmtN=(n)=>n==null?'—':Number(n).toLocaleString();
+
+function isoWeekKey(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const day=d.getDay()===0?7:d.getDay();
+  const mon=new Date(d);
+  mon.setDate(d.getDate()-day+1);
+  return mon.toISOString().slice(0,10);
+}
+
+function ApiKeyGate({onSave}){
+  const[key,setKey]=useState('');
+  return(
+    <div className="api-wrap">
+      <div className="eyebrow">THE ANALYST — SETUP</div>
+      <h1 style={{marginBottom:12}}>Tribe HQ Tracker</h1>
+      <p style={{color:'#8A8275',fontSize:14,marginBottom:24,lineHeight:1.6}}>Enter your Anthropic API key to enable screenshot reading and predictions. Saved locally in your browser only.</p>
+      <input className="api-input" type="password" placeholder="sk-ant-..." value={key} onChange={e=>setKey(e.target.value)}/>
+      <button className="api-btn" onClick={()=>{if(key.startsWith('sk-ant-')){lss('tribe-api-key',key);onSave(key);}}}>Save & Continue</button>
+      <p style={{color:'#8A8275',fontSize:12,marginTop:16}}>Get a key at <a href="https://console.anthropic.com" target="_blank" style={{color:'#D9A441'}}>console.anthropic.com</a></p>
+    </div>
+  );
+}
+
+function App(){
+  const[apiKey,setApiKey]=useState(()=>ls('tribe-api-key')||'');
+  const[snapshots,setSnapshots]=useState(()=>ls('tribe-stats-v2')||[]);
+  const[predictions,setPredictions]=useState(()=>ls('tribe-preds-v1')||[]);
+  const[extracting,setExtracting]=useState(false);
+  const[lastSaved,setLastSaved]=useState(null);
+  const[error,setError]=useState('');
+  const[predicting,setPredicting]=useState(false);
+  const[predError,setPredError]=useState('');
+  const[lastPred,setLastPred]=useState(null);
+
+  function saveSnaps(next){setSnapshots(next);lss('tribe-stats-v2',next);}
+  function savePreds(next){setPredictions(next);lss('tribe-preds-v1',next);}
+
+  async function toBase64(file){
+    return new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=()=>res(r.result.split(',')[1]);
+      r.onerror=rej;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function callClaude(messages,maxTokens=800){
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTokens,messages})
+    });
+    const data=await res.json();
+    return data.content.find(b=>b.type==='text')?.text||'';
+  }
+
+  async function handleUpload(file){
+    setExtracting(true);setError('');setLastSaved(null);
+    try{
+      const b64=await toBase64(file);
+      const text=await callClaude([{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:file.type||'image/png',data:b64}},
+        {type:'text',text:`YouTube Studio screenshot. Identify:
+A) Channel dashboard (total subs, 28-day views, watch time, revenue)
+B) Single video performance (title, views, CTR, AVD, elapsed time)
+Return ONLY raw JSON no markdown:
+{"type":"channel" or "video","date":"YYYY-MM-DD or null","subs":number or null,"views28":number or null,"watchtime28":number or null,"revenue28":number or null,"videoTitle":"string or null","videoViews":number or null,"videoCtr":number or null,"videoAvd":"string or null","videoCheckpoint":"string or null"}
+Convert K/M to full numbers. null for anything not visible.`}
+      ]}]);
+      const parsed=JSON.parse(text.replace(/\`\`\`json|\`\`\`/g,'').trim());
+      const today=new Date().toISOString().slice(0,10);
+      const snap={id:`s${Date.now()}`,date:parsed.date||today,...parsed};
+
+      if(snap.type==='channel'){
+        const filtered=snapshots.filter(s=>!(s.date===snap.date&&s.type==='channel'));
+        saveSnaps([snap,...filtered]);
+      }else{
+        const title=(snap.videoTitle||'').toLowerCase().trim();
+        const existing=snapshots.find(s=>s.type==='video-group'&&(s.videoTitle||'').toLowerCase().trim()===title);
+        const cp={date:snap.date,checkpoint:snap.videoCheckpoint||snap.date,views:snap.videoViews,ctr:snap.videoCtr,avd:snap.videoAvd};
+        let next;
+        if(existing){
+          const deduped=[...existing.checkpoints.filter(c=>c.checkpoint!==cp.checkpoint),cp].sort((a,b)=>a.date.localeCompare(b.date));
+          next=snapshots.map(s=>s.id===existing.id?{...s,checkpoints:deduped}:s);
+        }else{
+          next=[{id:`vg${Date.now()}`,type:'video-group',videoTitle:snap.videoTitle,firstSeen:snap.date,checkpoints:[cp]},...snapshots];
+        }
+        saveSnaps(next);
+      }
+      setLastSaved(snap);
+    }catch(e){setError('Couldn\'t read that screenshot. Try a clearer crop.');}
+    finally{setExtracting(false);}
+  }
+
+  async function handlePredUpload(file){
+    setPredicting(true);setPredError('');setLastPred(null);
+    try{
+      const b64=await toBase64(file);
+      const text=await callClaude([{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:file.type||'image/png',data:b64}},
+        {type:'text',text:`YouTube Studio video listing for Tribe Loui / THE ANALYST (Tribe HQ, ~36,800 subs). Channel: BTS/K-pop reactions, true crime (Rotten Mango "told by noona"), music analysis. Strong performers: 3.5K-6K views/week, CTR 4-6%, AVD 40-45min on 1.5-3hr videos. True crime and BTS best. Test lanes unproven.
+Read title and metadata, generate prediction.
+Return ONLY raw JSON no markdown:
+{"videoTitle":"string","monetized":true or false,"isPrivate":true or false,"lane":"BTS" or "True Crime" or "Music" or "Test Lane" or "Other","laneNote":"one sentence","realisticViews7d":number,"idealViews7d":number,"realisticCtr":"string","idealCtr":"string","realisticAvd":"string","idealAvd":"string","contentIdRisk":"Low" or "Medium" or "High","contentIdNote":"one sentence","analystTake":"2-3 sentences direct to Loui"}`}
+      ]},1200]);
+      const parsed=JSON.parse(text.replace(/\`\`\`json|\`\`\`/g,'').trim());
+      const pred={id:`p${Date.now()}`,date:new Date().toISOString().slice(0,10),...parsed};
+      savePreds([pred,...predictions]);
+      setLastPred(pred);
+    }catch(e){setPredError('Couldn\'t generate prediction. Try a clearer screenshot.');}
+    finally{setPredicting(false);}
+  }
+
+  const channelSnaps=useMemo(()=>snapshots.filter(s=>s.type==='channel').sort((a,b)=>b.date.localeCompare(a.date)),[snapshots]);
+  const videoGroups=useMemo(()=>snapshots.filter(s=>s.type==='video-group').sort((a,b)=>b.firstSeen.localeCompare(a.firstSeen)),[snapshots]);
+
+  const weeklyRollups=useMemo(()=>{
+    if(channelSnaps.length<2)return[];
+    const byWeek={};
+    channelSnaps.forEach(s=>{const wk=isoWeekKey(s.date);if(!byWeek[wk])byWeek[wk]=[];byWeek[wk].push(s);});
+    return Object.entries(byWeek)
+      .filter(([,e])=>new Set(e.map(x=>x.date)).size>1)
+      .map(([wk,entries])=>{
+        const sorted=[...entries].sort((a,b)=>a.date.localeCompare(b.date));
+        const s=sorted[0],e=sorted[sorted.length-1];
+        return{wk,start:s,end:e,deltaSubs:(e.subs||0)-(s.subs||0),deltaViews:(e.views28||0)-(s.views28||0),deltaRevenue:(e.revenue28||0)-(s.revenue28||0),deltaWatch:(e.watchtime28||0)-(s.watchtime28||0)};
+      })
+      .sort((a,b)=>b.wk.localeCompare(a.wk));
+  },[channelSnaps]);
+
+  const latest=channelSnaps[0];
+  if(!apiKey)return<ApiKeyGate onSave={setApiKey}/>;
+
+  return(
+    <div className="root">
+      <div className="eyebrow">THE ANALYST — FIELD OPS</div>
+      <h1>Stats HQ</h1>
+
+      {/* CHANNEL UPLOAD */}
+      <div className="section">
+        <div className="section-title">Channel Dashboard</div>
+        <label className={`upload-box${extracting?' loading':''}`} htmlFor="ch-up">
+          {extracting?'Reading screenshot…':'📸  Drop a channel dashboard screenshot — logs daily snapshot'}
+        </label>
+        <input id="ch-up" type="file" accept="image/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])handleUpload(e.target.files[0]);e.target.value='';}}/>
+        {error&&<div className="err">{error}</div>}
+        {lastSaved?.type==='channel'&&<div className="banner">✓ Saved — {lastSaved.date}: {fmtN(lastSaved.subs)} subs · {fmtN(lastSaved.views28)} views · {fmt$(lastSaved.revenue28)} revenue</div>}
+      </div>
+
+      {/* LATEST */}
+      {latest&&(
+        <div className="section">
+          <div className="section-title">Channel — Latest ({latest.date})</div>
+          <div className="grid4">
+            <div className="card"><div className="num">{fmtN(latest.subs)}</div><div className="lbl">Total subs</div></div>
+            <div className="card"><div className="num">{fmtN(latest.views28)}</div><div className="lbl">28-day views</div></div>
+            <div className="card"><div className="num" style={{color:'var(--amber)'}}>{fmt$(latest.revenue28)}</div><div className="lbl">28-day revenue</div></div>
+            <div className="card"><div className="num">{fmtN(latest.watchtime28)}</div><div className="lbl">Watch hrs (28d)</div></div>
+          </div>
+        </div>
+      )}
+
+      {/* WEEKLY ROLLUP */}
+      <div className="section">
+        <div className="section-title">Weekly Rollup</div>
+        {weeklyRollups.length===0
+          ?<div className="empty">Drop channel screenshots on different days — rollup appears once you have two different dates in the same week.</div>
+          :weeklyRollups.map(w=>(
+            <div className="week-card" key={w.wk}>
+              <div className="week-title">Week of {w.wk}</div>
+              <div style={{fontSize:11,color:'var(--muted)',fontFamily:'IBM Plex Mono,monospace'}}>{w.start.date} → {w.end.date}</div>
+              <div className="week-grid">
+                {[['Subs gained',w.deltaSubs,false],['Views Δ',w.deltaViews,false],['Revenue Δ',w.deltaRevenue,true],['Watch hrs Δ',w.deltaWatch,false]].map(([l,v,money])=>(
+                  <div className="week-stat" key={l}>
+                    <div className={`v ${v>0?'pos':v<0?'neg':''}`}>{v>0?'+':''}{money?fmt$(v):fmtN(v)}</div>
+                    <div className="l">{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      {/* PREDICTIONS */}
+      <div className="section">
+        <div className="section-title">Predictions</div>
+        <label className={`upload-box${predicting?' loading':''}`} htmlFor="pred-up">
+          {predicting?'Generating prediction…':'🔮  Drop a video listing screenshot — get a forecast'}
+        </label>
+        <input id="pred-up" type="file" accept="image/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])handlePredUpload(e.target.files[0]);e.target.value='';}}/>
+        {predError&&<div className="err">{predError}</div>}
+        {predictions.length===0&&!predicting&&<div className="empty">No predictions yet.</div>}
+        {predictions.map(p=>(
+          <div className="pred-card" key={p.id}>
+            <button className="remove" onClick={()=>savePreds(predictions.filter(x=>x.id!==p.id))}>×</button>
+            <div className="vid-title">{p.videoTitle}</div>
+            <div className="vid-meta">{p.date} · {p.lane}{p.monetized===false?' · NOT MONETIZED':''}{p.isPrivate?' · PRIVATE':''}</div>
+            <div className="pred-grid">
+              <div className="pred-stat"><div className="v">{fmtN(p.realisticViews7d)}–{fmtN(p.idealViews7d)}</div><div className="l">Views at 7d</div></div>
+              <div className="pred-stat"><div className="v">{p.realisticCtr} → {p.idealCtr}</div><div className="l">CTR range</div></div>
+              <div className="pred-stat"><div className="v">{p.realisticAvd} → {p.idealAvd}</div><div className="l">AVD range</div></div>
+              <div className="pred-stat"><div className={`v risk-${(p.contentIdRisk||'').toLowerCase().slice(0,3)}`}>{p.contentIdRisk||'—'}</div><div className="l">Content ID risk</div></div>
+            </div>
+            {p.contentIdNote&&<div style={{fontSize:11,color:'var(--muted)',marginBottom:8}}>{p.contentIdNote}</div>}
+            {p.analystTake&&<div className="pred-take">{p.analystTake}</div>}
+          </div>
+        ))}
+      </div>
+
+      {/* VIDEO CHECKPOINTS */}
+      <div className="section">
+        <div className="section-title">Video Checkpoints ({videoGroups.length})</div>
+        <label className={`upload-box${extracting?' loading':''}`} htmlFor="vid-up">
+          {extracting?'Reading screenshot…':'📊  Drop a video performance screenshot — adds to existing card or creates new one'}
+        </label>
+        <input id="vid-up" type="file" accept="image/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])handleUpload(e.target.files[0]);e.target.value='';}}/>
+        {lastSaved?.type==='video'&&<div className="banner" style={{marginTop:10}}>✓ Checkpoint logged — "{lastSaved.videoTitle}" · {fmtN(lastSaved.videoViews)} views · {lastSaved.videoCtr!=null?`${lastSaved.videoCtr}% CTR`:'—'} · {lastSaved.videoAvd||'—'} AVD</div>}
+        {videoGroups.length===0
+          ?<div className="empty">Drop a single-video performance screenshot to start.</div>
+          :videoGroups.map(v=>(
+            <div className="vid-card" key={v.id} style={{marginTop:12}}>
+              <button className="remove" onClick={()=>saveSnaps(snapshots.filter(s=>s.id!==v.id))}>×</button>
+              <div className="vid-title">{v.videoTitle||'Untitled'}</div>
+              <div className="vid-meta">First logged {v.firstSeen} · {v.checkpoints.length} checkpoint{v.checkpoints.length!==1?'s':''}</div>
+              <table>
+                <thead><tr><th>Checkpoint</th><th>Views</th><th>CTR</th><th>AVD</th></tr></thead>
+                <tbody>
+                  {v.checkpoints.map((c,i)=>(
+                    <tr key={i}>
+                      <td style={{color:'var(--amber)',fontFamily:'IBM Plex Mono,monospace',fontSize:11}}>{c.checkpoint||c.date}</td>
+                      <td>{fmtN(c.views)}</td>
+                      <td>{c.ctr!=null?`${Number(c.ctr).toFixed(1)}%`:'—'}</td>
+                      <td>{c.avd||'—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))
+        }
+      </div>
+
+      {/* SNAPSHOT HISTORY */}
+      {channelSnaps.length>0&&(
+        <div className="section">
+          <div className="section-title">Snapshot History ({channelSnaps.length})</div>
+          {channelSnaps.map(s=>(
+            <div className="vid-card" key={s.id}>
+              <button className="remove" onClick={()=>saveSnaps(snapshots.filter(x=>x.id!==s.id))}>×</button>
+              <div className="vid-title">{s.date}</div>
+              <div style={{display:'flex',gap:16,flexWrap:'wrap',fontSize:12,marginTop:6}}>
+                {[['Subs',s.subs],['Views (28d)',s.views28],['Revenue',s.revenue28,true],['Watch hrs',s.watchtime28]].map(([l,v,money])=>(
+                  <div key={l}><span style={{display:'block',fontSize:10,color:'var(--muted)',fontFamily:'IBM Plex Mono,monospace',textTransform:'uppercase'}}>{l}</span>{money?fmt$(v):fmtN(v)}</div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button className="settings-btn" onClick={()=>{if(window.confirm('Reset API key?')){lss('tribe-api-key',null);setApiKey('');}}}>⚙ Reset API key</button>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
